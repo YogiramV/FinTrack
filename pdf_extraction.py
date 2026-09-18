@@ -1,5 +1,6 @@
 import re
 import pymupdf as pdf
+import data_cleaner as dc
 
 
 # ============================================================
@@ -78,14 +79,6 @@ def extract_statement_metadata(doc):
     # USER NAME
     # ========================================================
 
-    # HDFC format:
-    #
-    # V YOGIRAM
-    # S/O VIJAYAN SITE NO 189 ...
-    #
-    # Get the line immediately before S/O / D/O / W/O.
-    # ========================================================
-
     for i, line in enumerate(lines):
 
         if re.match(
@@ -102,14 +95,6 @@ def extract_statement_metadata(doc):
     # ========================================================
     # CURRENCY
     # ========================================================
-
-    # HDFC India credit-card statements may extract the
-    # Rupee symbol as "C", for example:
-    #
-    # C7,700.00
-    # C5,066.00
-    #
-    # Therefore identify this HDFC India statement as INR.
 
     if (
         metadata["bank_name"] == "HDFC Bank"
@@ -739,27 +724,16 @@ def extract_transactions(pdf_path):
 
         metadata = extract_statement_metadata(doc)
 
-        print()
-        print("STATEMENT METADATA")
-        print("-" * 80)
-        print(metadata)
-
         # ----------------------------------------------------
         # Detect card format once from complete PDF.
         # ----------------------------------------------------
 
         card_format = detect_card_format(doc)
-
         if card_format is None:
 
             raise ValueError(
                 "Could not detect HDFC card format."
             )
-
-        print(
-            f"Detected card format: {card_format}"
-        )
-
         all_transactions = []
 
         # ----------------------------------------------------
@@ -767,12 +741,6 @@ def extract_transactions(pdf_path):
         # ----------------------------------------------------
 
         for page_number, page in enumerate(doc):
-
-            print()
-            print(
-                f"PAGE {page_number + 1}"
-            )
-            print("-" * 80)
 
             # ------------------------------------------------
             # Millennia
@@ -802,21 +770,11 @@ def extract_transactions(pdf_path):
             # Output transactions.
             # ------------------------------------------------
 
-            if not transactions:
+            for transaction in transactions:
 
-                print(
-                    "No transactions found."
+                all_transactions.append(
+                    transaction
                 )
-
-            else:
-
-                for transaction in transactions:
-
-                    print(transaction)
-
-                    all_transactions.append(
-                        transaction
-                    )
 
         # ----------------------------------------------------
         # Return metadata + transactions.
@@ -841,5 +799,5 @@ def run(file_path):
     result = extract_transactions(
         'samples/'+file_path
     )
-
+    dc.clean_data(result)
     return result
