@@ -343,7 +343,7 @@ def extract_millennia_transactions(page):
             "time": time,
             "description": description,
             "amount": amount,
-            "indicators": indicators,
+            "indicators": indicators
         })
 
     return transactions
@@ -702,7 +702,7 @@ def extract_rupay_transactions(page):
             "time": time,
             "description": description,
             "amount": amount,
-            "indicators": indicators,
+            "indicators": indicators
         })
 
     return transactions
@@ -776,6 +776,8 @@ def extract_transactions(pdf_path):
                     transaction
                 )
 
+        # Add card type
+        metadata['card_type'] = card_format
         # ----------------------------------------------------
         # Return metadata + transactions.
         # ----------------------------------------------------
@@ -799,5 +801,4 @@ def run(file_path):
     result = extract_transactions(
         'samples/'+file_path
     )
-    dc.clean_data(result)
-    return result
+    return dc.clean_data(result)
