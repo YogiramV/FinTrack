@@ -777,7 +777,7 @@ def extract_transactions(pdf_path):
                 )
 
         # Add card type
-        metadata['card_type'] = card_format
+        metadata['account_type'] = card_format
         # ----------------------------------------------------
         # Return metadata + transactions.
         # ----------------------------------------------------
