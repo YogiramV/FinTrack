@@ -4,3 +4,4 @@ def clean_data(raw_data):
             i['transaction_type'] = 'Credit'
         else:
             i['transaction_type'] = 'Debit'
+    return raw_data
