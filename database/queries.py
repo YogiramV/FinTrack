@@ -96,7 +96,6 @@ def get_statements(acc_id=None):
 
     with conn.cursor() as cur:
         if acc_id is not None:
-            print('Here')
             cur.execute(
                 "Select * from statements where account_id= %s", (acc_id,)
             )
