@@ -708,75 +708,45 @@ def extract_rupay_transactions(page):
 # MAIN EXTRACTION
 # ============================================================
 
-def extract_transactions(pdf_path):
+def extract_transactions(pdf_source):
 
-    doc = pdf.open(pdf_path)
+    if isinstance(pdf_source, (str, bytes)):
+        if isinstance(pdf_source, str):
+            doc = pdf.open(pdf_source)
+        else:
+            doc = pdf.open(stream=pdf_source, filetype="pdf")
+    else:
+        doc = pdf.open(
+            stream=pdf_source.read(),
+            filetype="pdf"
+        )
 
     try:
-
-        # ----------------------------------------------------
-        # Extract metadata once from complete PDF.
-        # ----------------------------------------------------
-
         metadata = extract_statement_metadata(doc)
 
-        # ----------------------------------------------------
-        # Detect card format once from complete PDF.
-        # ----------------------------------------------------
-
         card_format = detect_card_format(doc)
-        if card_format is None:
 
+        if card_format is None:
             raise ValueError(
                 "Could not detect HDFC card format."
             )
-        all_transactions = []
 
-        # ----------------------------------------------------
-        # Process pages.
-        # ----------------------------------------------------
+        all_transactions = []
 
         for page_number, page in enumerate(doc):
 
-            # ------------------------------------------------
-            # Millennia
-            # ------------------------------------------------
-
             if card_format == "millennia":
-
-                transactions = (
-                    extract_millennia_transactions(page)
-                )
-
-            # ------------------------------------------------
-            # RuPay
-            # ------------------------------------------------
+                transactions = extract_millennia_transactions(page)
 
             elif card_format == "rupay":
-
-                transactions = (
-                    extract_rupay_transactions(page)
-                )
+                transactions = extract_rupay_transactions(page)
 
             else:
-
                 transactions = []
 
-            # ------------------------------------------------
-            # Output transactions.
-            # ------------------------------------------------
+            all_transactions.extend(transactions)
 
-            for transaction in transactions:
-
-                all_transactions.append(
-                    transaction
-                )
-
-        # Add card type
-        metadata['account_type'] = card_format
-        # ----------------------------------------------------
-        # Return metadata + transactions.
-        # ----------------------------------------------------
+        metadata["account_type"] = card_format
 
         return {
             "metadata": metadata,
@@ -784,7 +754,6 @@ def extract_transactions(pdf_path):
         }
 
     finally:
-
         doc.close()
 
 
@@ -792,9 +761,8 @@ def extract_transactions(pdf_path):
 # RUN
 # ============================================================
 
-def run(file_path):
+def run(uploaded_file):
 
-    result = extract_transactions(
-        'samples/'+file_path
-    )
+    result = extract_transactions(uploaded_file)
+
     return dc.clean_data(result)
