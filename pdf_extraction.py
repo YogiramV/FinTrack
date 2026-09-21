@@ -505,10 +505,6 @@ def extract_rupay_transactions(page):
 
     if header_y is None:
 
-        print(
-            "WARNING: RuPay transaction header not found"
-        )
-
         return []
 
     # --------------------------------------------------------

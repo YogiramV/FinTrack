@@ -24,7 +24,8 @@ def create_tables():
                         statement_id SERIAL PRIMARY KEY,
                         account_id INTEGER REFERENCES accounts(account_id),
                         statement_start_date DATE NOT NULL,
-                        statement_end_date DATE NOT NULL
+                        statement_end_date DATE NOT NULL,
+                        UNIQUE (account_id, statement_start_date, statement_end_date)
                     )
                     """)
 
@@ -48,9 +49,6 @@ def create_tables():
                         name VARCHAR(100) NOT NULL
                     )
                     """)
-
-        dat = cur.execute("select * from accounts;")
-        print(dat)
 
     conn.commit()
     conn.close()
