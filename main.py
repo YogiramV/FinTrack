@@ -6,13 +6,16 @@ from pdf_extraction import run
 from database.tables import create_tables
 from database.queries import *
 from transaction_analyzer import *
+from kafka_producer import *
 
 
 st.title("FinTrack")
 
+
 # --------------------------------------------------
 # Sidebar
 # --------------------------------------------------
+
 
 with st.sidebar:
 
@@ -71,7 +74,7 @@ with upload_tab:
 
                 try:
                     data = run(uploaded_file)
-                    insert(data)
+                    produce_to_kafka(data)
 
                     st.success(
                         f"{uploaded_file.name} processed successfully."
