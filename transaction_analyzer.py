@@ -1,10 +1,16 @@
 from database.connection import get_connection
+import pandas as pd
 
 non_purchase_categories = [
     'EMI',
     'Fees & Charges',
     'Taxes & Charges',
     'Card Payment'
+]
+
+MONTH_ORDER = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ]
 
 
@@ -107,3 +113,26 @@ def get_monthly_spending(month, year):
 
     conn.close()
     return (0 if not (monthly_spending[0]) else monthly_spending[0])
+
+
+def get_yearly_monthly_spending(year):
+    data = []
+
+    for month in range(1, 13):
+        spending = get_monthly_spending(month, year)
+
+        data.append({
+            "Month": MONTH_ORDER[month - 1],
+            "Spending": float(spending)
+        })
+
+    df = pd.DataFrame(data)
+
+    # Explicitly tell pandas the correct order
+    df["Month"] = pd.Categorical(
+        df["Month"],
+        categories=MONTH_ORDER,
+        ordered=True
+    )
+
+    return df.sort_values("Month")

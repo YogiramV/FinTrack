@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 from pdf_extraction import run
 from database.tables import create_tables
 from database.queries import *
+from transaction_analyzer import *
 
 
 st.title("FinTrack")
@@ -36,8 +38,9 @@ create_tables()
 # Tabs
 # --------------------------------------------------
 
-upload_tab, accounts_tab, statements_tab, transactions_tab = st.tabs([
+upload_tab, analytics_tab, accounts_tab, statements_tab, transactions_tab = st.tabs([
     "📤 Upload Statements",
+    "📊 Analytics",
     "👤 Accounts",
     "📄 Statements",
     "💳 Transactions"
@@ -80,7 +83,170 @@ with upload_tab:
                         f"Failed to process {uploaded_file.name}: {e}"
                     )
 
+# ==================================================
+# ANALYTICS
+# ==================================================
 
+
+def show_category_spending():
+    category_spending = get_spending_by_category()
+
+    # Convert query result into DataFrame
+    df = pd.DataFrame(
+        category_spending,
+        columns=["Category", "Spending"]
+    )
+
+    # Convert Decimal values returned by PostgreSQL
+    df["Spending"] = df["Spending"].astype(float)
+
+    # Pie chart
+    fig = px.pie(
+        df,
+        names="Category",
+        values="Spending",
+        title="Total Spending by Category",
+        hole=0.3
+    )
+
+    fig.update_traces(
+        textposition="inside",
+        textinfo="percent+label"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+
+with analytics_tab:
+
+    st.header("Transaction Analytics")
+    total_purchases = get_total_purchases()
+
+    # -----------------------------
+    # Summary Cards
+    # -----------------------------
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            "Total Purchases",
+            f"₹{total_purchases}"
+        )
+
+    with col2:
+        st.metric(
+            "Total Rewards",
+            f"₹{get_total_rewards()}"
+        )
+
+    with col3:
+        st.metric(
+            "Total Fees",
+            f"₹{get_total_fees()}"
+        )
+
+    with col4:
+        emi = get_emi_summary()
+        total_emi = sum(emi) if emi else 0
+
+        st.metric(
+            "Total EMI",
+            f"₹{total_emi}"
+        )
+
+    st.divider()
+
+    # -----------------------------
+    # EMI & Fee Breakdown
+    # -----------------------------
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.subheader("EMI Breakdown")
+
+        emi_cat = [
+            "Principal",
+            "Interest",
+            "Conversion"
+        ]
+
+        emi = get_emi_summary()
+
+        emi_breakdown = []
+
+        for category, value in zip(emi_cat, emi):
+            emi_breakdown.append({
+                "Component": category,
+                "Amount": f"₹{value:,.2f}"
+            })
+
+        if emi_breakdown:
+            st.dataframe(
+                pd.DataFrame(emi_breakdown),
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.info("No EMI data available.")
+
+    with col2:
+
+        st.subheader("Fee Breakdown")
+
+        fee_cat = [
+            "Processing Fee",
+            "Cashback Redemption Fee"
+        ]
+
+        fees = get_fee_breakdown()
+
+        fee_breakdown = []
+
+        for category, value in zip(fee_cat, fees):
+            fee_breakdown.append({
+                "Fee Type": category,
+                "Amount": f"₹{value:,.2f}"
+            })
+
+        if fee_breakdown:
+            st.dataframe(
+                pd.DataFrame(fee_breakdown),
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.info("No fee data available.")
+
+    if total_purchases > 0:
+        st.divider()
+
+        st.title("Spending Dashboard")
+
+        st.subheader("Spending by category")
+        show_category_spending()
+
+        year = st.number_input(
+            "Select Year",
+            min_value=2020,
+            max_value=2030,
+            value=2026,
+            step=1
+        )
+        st.subheader(f"Monthly Spending - {year}")
+
+        df = get_yearly_monthly_spending(year)
+
+        st.bar_chart(
+            df,
+            x="Month",
+            y="Spending"
+        )
 # ==================================================
 # ACCOUNTS
 # ==================================================
