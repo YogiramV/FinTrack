@@ -4,7 +4,7 @@
 
 FinTrack is a data-driven personal finance platform that transforms bank statement PDFs into structured financial data and provides meaningful insights into spending, income, budgeting, and financial patterns.
 
-The project is designed as an end-to-end data engineering and analytics system, covering document ingestion, data processing, event streaming, batch processing, orchestration, storage, analytics, and visualization.
+The project is designed as an end-to-end data engineering and analytics system, covering document ingestion, data cleaning, transaction analysis, storage, event streaming, batch processing, orchestration, and visualization.
 
 ---
 
@@ -12,27 +12,27 @@ The project is designed as an end-to-end data engineering and analytics system, 
 
 Managing personal finances often involves manually reviewing bank statements and tracking expenses across different categories.
 
-FinTrack automates this process by allowing users to upload their bank statements and converting the extracted transaction data into actionable financial insights.
+FinTrack automates this process by allowing users to upload their bank statements and converting the extracted transaction data into meaningful financial insights.
 
 ### Core workflow
 
 ```text
 Bank Statement PDF
         ↓
-PDF Ingestion
+    Extraction
         ↓
-Data Cleaning & Normalization
+      Clean
         ↓
-Transaction Categorization
+    Analysis
         ↓
-Data Storage
+     Stream
         ↓
-Analytics & Budgeting
+   PostgreSQL
         ↓
-Financial Insights
+Financial Analytics
 ```
 
-The system is designed to support both real-time/event-driven processing and scheduled batch processing.
+The system is being developed incrementally, with event-driven processing, batch processing, orchestration, and containerization being introduced progressively.
 
 ---
 
@@ -50,7 +50,7 @@ The system is designed to support both real-time/event-driven processing and sch
 ### Transaction Management
 
 * Store structured transactions
-* Normalize merchant names
+* Normalize transaction information
 * Detect duplicate transactions
 * Track debit and credit transactions
 * Associate transactions with accounts and statements
@@ -59,42 +59,32 @@ The system is designed to support both real-time/event-driven processing and sch
 
 * Automatic transaction categorization
 * Category and subcategory support
-* Rule-based merchant classification
-* User correction of incorrect categories
-* Persistent categorization history
+* Rule-based transaction classification
+* Support for financial transaction types such as EMI, fees, payments, and rewards
 
 ### Financial Analytics
 
-* Total income and expenses
-* Net savings
-* Savings rate
-* Monthly spending trends
+* Total purchases
+* Total payments
+* Total rewards
+* Total fees
+* EMI summaries
 * Category-wise spending
-* Merchant-wise spending
-* Income and expense analysis
-* Budget utilization
+* Monthly spending trends
+* Financial transaction analysis
 
-### Budgeting
+### Data Streaming
 
-* Create monthly budgets
-* Category-level budgets
-* Track spending against budgets
-* Monitor remaining budget
-* Identify overspending
-
-### Advanced Insights
-
-* Recurring transaction detection
-* Subscription tracking
-* Spending anomaly detection
-* Cash-flow analysis
-* Financial trends and insights
+* Event-driven transaction processing
+* Apache Kafka integration
+* Producer and consumer architecture
+* Decoupled transaction processing
 
 ---
 
 ## Architecture
 
-FinTrack follows a modular data pipeline architecture.
+FinTrack follows a modular data processing architecture.
 
 ```text
                          ┌──────────────┐
@@ -103,51 +93,48 @@ FinTrack follows a modular data pipeline architecture.
                                 │
                                 ▼
                          ┌──────────────┐
+                         │  Streamlit   │
                          │  Application │
-                         │   / API      │
                          └──────┬───────┘
                                 │
                                 ▼
                          ┌──────────────┐
-                         │ PDF Ingestion│
+                         │   Extraction │
+                         │     PDFs     │
                          └──────┬───────┘
                                 │
                                 ▼
                          ┌──────────────┐
-                         │     Kafka    │
+                         │    Clean     │
+                         │     Data     │
                          └──────┬───────┘
                                 │
                                 ▼
                          ┌──────────────┐
-                         │   PySpark    │
-                         │  Processing  │
+                         │    Analyze   │
+                         │ Transactions │
                          └──────┬───────┘
                                 │
                                 ▼
                          ┌──────────────┐
+                         │    Stream    │
+                         │    Kafka     │
+                         └──────┬───────┘
+                                │
+                                ▼
+                         ┌──────────────┐
+                         │   Database   │
                          │  PostgreSQL  │
                          └──────┬───────┘
                                 │
-                    ┌───────────┴───────────┐
-                    ▼                       ▼
-              ┌───────────┐           ┌───────────┐
-              │ Analytics │           │ Budgeting │
-              └─────┬─────┘           └─────┬─────┘
-                    │                       │
-                    └───────────┬───────────┘
                                 ▼
                          ┌──────────────┐
+                         │   Analytics  │
                          │  Dashboard   │
                          └──────────────┘
-
-                    Airflow
-                       │
-             ┌─────────┴─────────┐
-             ▼                   ▼
-       Batch Processing     Data Quality
 ```
 
-The architecture is intentionally modular so individual components can be developed, tested, and scaled independently.
+The architecture is modular so that individual components can be developed, tested, and extended independently.
 
 ---
 
@@ -155,34 +142,32 @@ The architecture is intentionally modular so individual components can be develo
 
 | Technology         | Purpose                                        |
 | ------------------ | ---------------------------------------------- |
-| **Python**         | Application logic, PDF processing and services |
-| **PostgreSQL**     | Transactional and analytical data storage      |
+| **Python**         | Application logic and data processing          |
+| **PostgreSQL**     | Transactional data storage                     |
 | **Apache Kafka**   | Event streaming and decoupled processing       |
-| **PySpark**        | Data transformation and batch analytics        |
+| **PySpark**        | Data transformation and batch processing       |
 | **Apache Airflow** | Workflow orchestration                         |
 | **Docker**         | Containerization and reproducible environments |
-| **AWS**            | Optional cloud storage/deployment              |
-| **Streamlit / UI** | Financial analytics interface                  |
+| **AWS**            | Cloud deployment and infrastructure            |
+| **Streamlit**      | Financial analytics interface                  |
 
 ---
 
 ## Data Model
 
-The core data model is centered around users, accounts, statements, and transactions.
+The core data model is centered around accounts, statements, transactions, and categories.
 
 ```text
-User
- │
- ├── Account
- │      │
- │      └── Statement
- │              │
- │              └── Transactions
- │
- └── Budgets
+Account
+   │
+   └── Statement
+          │
+          └── Transactions
+                  │
+                  └── Category
 ```
 
-A normalized transaction contains information such as:
+A transaction contains information such as:
 
 ```text
 Transaction
@@ -190,77 +175,94 @@ Transaction
 ├── Account
 ├── Statement
 ├── Transaction Date
+├── Transaction Time
 ├── Description
 ├── Amount
 ├── Transaction Type
-├── Balance
-├── Category
-└── Subcategory
+└── Category
 ```
 
 ---
 
 ## Data Pipeline
 
-### 1. Ingestion
+### 1. Extraction
 
 A bank statement PDF is uploaded to FinTrack.
 
 ```text
 PDF
  ↓
-Parser
+Extraction
  ↓
 Raw Transaction Data
 ```
 
+The extraction layer identifies transaction information and relevant statement metadata from supported bank statement formats.
+
 ### 2. Cleaning
 
-Extracted data is standardized and validated.
+Extracted transaction data is standardized and validated.
 
 ```text
 Raw Data
- ↓
+   ↓
 Date normalization
- ↓
+   ↓
 Amount normalization
- ↓
+   ↓
 Description cleaning
- ↓
-Duplicate detection
- ↓
+   ↓
+Duplicate handling
+   ↓
 Validation
 ```
 
-### 3. Processing
+### 3. Analysis
 
-Transactions are processed through the event-driven pipeline.
+Cleaned transactions are analyzed to derive financial information.
+
+```text
+Clean Transactions
+        ↓
+Transaction Classification
+        ↓
+Category Analysis
+        ↓
+Financial Aggregations
+```
+
+Examples include:
+
+* Spending by category
+* Monthly spending
+* Purchases
+* Payments
+* Rewards
+* Fees
+* EMI information
+
+### 4. Streaming
+
+Transactions can be processed through an event-driven pipeline.
 
 ```text
 Transaction
-      ↓
-    Kafka
-      ↓
-   Consumer
-      ↓
- Processing
+     ↓
+   Kafka
+     ↓
+  Consumer
+     ↓
+  Processing
 ```
 
-### 4. Storage
+### 5. Storage
 
 Processed transactions and financial metadata are persisted in PostgreSQL.
 
-### 5. Analytics
+### 6. Analytics
 
-Aggregations are generated for:
-
-* monthly spending
-* categories
-* merchants
-* income
-* expenses
-* savings
-* budgets
+The stored data is used to generate financial analytics and dashboard visualizations.
 
 ---
 
@@ -269,26 +271,30 @@ Aggregations are generated for:
 ```text
 FinTrack/
 │
-├── application/
-├── ingestion/
-├── processing/
-├── categorization/
-├── analytics/
-├── budgeting/
-├── database/
-├── airflow/
-├── spark/
-├── kafka/
-├── tests/
-├── docs/
+├── analyze/
+│   └── Transaction analysis
 │
-├── docker-compose.yml
+├── clean/
+│   └── Data cleaning and normalization
+│
+├── database/
+│   └── Database connection, tables and queries
+│
+├── extraction/
+│   └── Bank statement PDF extraction
+│
+├── stream/
+│   └── Kafka streaming components
+│
+├── main.py
 ├── requirements.txt
+├── docker-compose.yml
+├── Dockerfile
 ├── .env.example
 └── README.md
 ```
 
-The exact structure may evolve as the system develops.
+The project structure may evolve as additional components such as PySpark, Airflow, and cloud infrastructure are introduced.
 
 ---
 
@@ -297,12 +303,12 @@ The exact structure may evolve as the system develops.
 ### Prerequisites
 
 * Python
-* Docker
-* Docker Compose
 * PostgreSQL
 * Apache Kafka
-* Apache Spark
-* Apache Airflow
+* Docker
+* Docker Compose
+
+Additional components such as PySpark and Apache Airflow will be required as their respective pipeline stages are implemented.
 
 ### Clone the repository
 
@@ -321,13 +327,9 @@ Create a local environment file based on:
 
 Configure the required database and application settings.
 
-### Start the services
+### Start the application
 
-```bash
-docker compose up
-```
-
-Follow the project documentation for the complete local setup and service-specific configuration.
+Run the Streamlit application using the project's configured entry point.
 
 ---
 
@@ -359,6 +361,7 @@ FinTrack focuses on several real-world data engineering challenges:
 * Inconsistent transaction formats
 * Data normalization
 * Duplicate detection
+* Transaction categorization
 * Event-driven processing
 * Batch processing
 * Workflow orchestration
@@ -366,7 +369,7 @@ FinTrack focuses on several real-world data engineering challenges:
 * Idempotent transaction processing
 * Scalable analytics
 * Containerized development
-* Secure handling of sensitive data
+* Secure handling of sensitive financial data
 
 ---
 
@@ -382,6 +385,8 @@ Potential future improvements include:
 * Advanced recurring-payment detection
 * Automated financial reports
 * Additional visualization capabilities
+* PySpark-based batch processing
+* Airflow-based workflow orchestration
 * Cloud-native deployment
 
 ---
