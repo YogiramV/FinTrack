@@ -1,4 +1,6 @@
 streamlit
 pymupdf
+dotenv
+plotly
 psycopg[binary]
 kafka-python

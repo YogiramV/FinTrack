@@ -1,11 +1,14 @@
+from database.queries import *
 import json
 from kafka import KafkaConsumer
+from dotenv import load_dotenv
+import os
 
-from database.queries import *
+load_dotenv()
 
 consumer = KafkaConsumer(
     "financial-transactions",
-    bootstrap_servers="localhost:9092",
+    bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVERS"),
     auto_offset_reset="earliest",
     group_id="fintrack-consumer",
     enable_auto_commit=False

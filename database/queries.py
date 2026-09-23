@@ -1,4 +1,5 @@
 from database.connection import get_connection
+from datetime import datetime
 
 
 def clear_database():
@@ -61,7 +62,13 @@ def get_accounts():
 
 def insert_statement(transaction_data, acc_id):
     statement_id = None
-    start_date, end_date = transaction_data[0]['date'], transaction_data[-1]['date']
+
+    start_date = datetime.strptime(
+        transaction_data[0]["date"], "%d/%m/%Y").date()
+
+    end_date = datetime.strptime(
+        transaction_data[-1]["date"], "%d/%m/%Y").date()
+
     conn = get_connection()
 
     with conn.cursor() as cur:
@@ -117,7 +124,10 @@ def insert_transactions(statement_id, transaction_data):
         rows = [
             (
                 statement_id,
-                transaction["date"],
+                datetime.strptime(
+                    transaction["date"],
+                    "%d/%m/%Y"
+                ).date(),
                 transaction["time"],
                 transaction["description"],
                 transaction["amount"],
@@ -351,5 +361,6 @@ def insert(data):
             categorize_transactions()
 
         return True
-    except:
-        return False
+    except Exception as e:
+        print(f"Insert failed: {e}")
+        raise
