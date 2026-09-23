@@ -7,13 +7,14 @@ consumer = KafkaConsumer(
     "financial-transactions",
     bootstrap_servers="localhost:9092",
     auto_offset_reset="earliest",
-    group_id="fintrack-consumer"
+    group_id="fintrack-consumer",
+    enable_auto_commit=False
 )
 
 print("Waiting for messages...")
 
 for message in consumer:
-    print("Consumed...")
     data = json.loads(message.value.decode("utf-8"))
 
-    insert(data)
+    if insert(data):
+        consumer.commit()

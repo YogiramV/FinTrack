@@ -336,15 +336,20 @@ def get_categories():
 
 # Main insert function
 def insert(data):
-    meta_data = data['metadata']
-    transactions_data = data['transactions']
-    acc_id = insert_account(meta_data)
-    statement_id = insert_statement(
-        transactions_data, acc_id)
-    if statement_id is not None:
-        insert_transactions(
-            statement_id,
-            transactions_data
-        )
+    try:
+        meta_data = data['metadata']
+        transactions_data = data['transactions']
+        acc_id = insert_account(meta_data)
+        statement_id = insert_statement(
+            transactions_data, acc_id)
+        if statement_id is not None:
+            insert_transactions(
+                statement_id,
+                transactions_data
+            )
 
-        categorize_transactions()
+            categorize_transactions()
+
+        return True
+    except:
+        return False
