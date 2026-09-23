@@ -1,6 +1,6 @@
 import re
 import pymupdf as pdf
-import data_cleaner as dc
+import clean.data_cleaner as dc
 
 
 # ============================================================

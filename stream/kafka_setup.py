@@ -65,9 +65,8 @@ def create_topic():
 
 
 def start_consumer():
-
     consumer_process = subprocess.Popen(
-        ["python3", "kafka_consumer.py"]
+        ["python3", "-m", "stream.kafka_consumer"]
     )
 
 

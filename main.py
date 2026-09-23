@@ -2,11 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from pdf_extraction import run
+from extraction.pdf_extraction import run
 from database.tables import create_tables
 from database.queries import *
-from transaction_analyzer import *
-from kafka_producer import *
+from analyze.transaction_analyzer import *
+from stream.kafka_producer import *
 
 
 st.title("FinTrack")
